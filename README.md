@@ -154,11 +154,58 @@ Profile: Pop / Happy (target energy 0.80, likes acoustic: False)
 
 ## Experiments You Tried
 
-Use this section to document the experiments you ran. For example:
+### Weight Shift: double energy, halve genre
 
-- What happened when you changed the weight on genre from 2.0 to 0.5
-- What happened when you added tempo or valence to the score
-- How did your system behave for different types of users
+**Prompt to my AI coding assistant:** "In `src/recommender.py`, run an experiment:
+halve `GENRE_MATCH_POINTS` (2.0 → 1.0) and double `ENERGY_MATCH_MAX_POINTS` (2.0 → 4.0),
+leaving mood and acousticness untouched. Apply it, and verify the math stays valid — the
+max possible score needs to update everywhere it's displayed, and each song's printed
+point breakdown should still sum to its total score."
+
+The assistant added a `MAX_POSSIBLE_SCORE` constant to `recommender.py` (the sum of the
+four weight constants) and pointed `main.py`'s score printout at it instead of a
+hardcoded `"/ 6.00"` string, so the max rose from `6.0` to `7.0` consistently everywhere,
+and every printed breakdown still summed correctly (e.g. `Sunrise City`:
+`1.0 + 1.0 + 3.68 + 1.0 = 6.68 / 7.00` ✓).
+
+**Where it changed nothing:** the #1 song was identical across all 7 stress-test
+profiles before and after the shift (Sunrise City, Library Rain, Storm Runner, Gym Hero,
+Broken Amp, Neon Pulse, Winter Sonata). When one song already leads on genre + mood +
+acoustic fit *and* has close energy, no reasonable reweighting knocks it out of first.
+
+**Where it changed the ranking, not just the number:**
+
+- **Chill Lofi**, ranks #3/#4 flipped. Baseline: `Focus Flow` (lofi genre match,
+  4.80/6.00) ahead of `Spacewalk Thoughts` (ambient, no genre match, 3.96/6.00). After
+  the shift: `Spacewalk Thoughts` (5.92/7.00) jumps ahead of `Focus Flow` (5.60/7.00) —
+  its slightly closer energy match (gap 0.02 vs. 0.10) was worth little at the old 2.0x
+  weight but became decisive at 4.0x, overturning the genre-match advantage.
+- **Contradiction: Acoustic-Loving Raver**, two songs dropped out of the top 5 entirely.
+  Baseline top 5 included `Dusty Backroads` (#2, acoustic + moderate energy) and
+  `Midnight Coding` (#5, acoustic + low energy) — the only songs besides the #1 pick that
+  honored the profile's `likes_acoustic=True`. Under the weight shift, both are pushed
+  out by `Storm Runner` and `Sunrise City` — loud, non-acoustic songs whose only
+  qualification is energy proximity. The acoustic preference was already fighting an
+  uphill battle against a `target_energy=0.95`; doubling energy's weight buried it
+  completely.
+
+**Cross-profile repetition, before vs. after:** `Gym Hero` appeared in 5 of 7 profiles'
+top 5 in both versions — unaffected either way. But `Storm Runner` and `Sunrise City`
+each climbed from 4 of 7 profiles to 5 of 7 under the shift (both newly appearing in the
+Acoustic Raver list above, displacing the acoustic songs). So the "same handful of
+high-energy generalist songs everywhere" pattern flagged in `model_card.md` got *worse*,
+not better.
+
+**Verdict: more accurate, or just different?** Just different — and arguably less
+accurate on the profiles that mattered most. The change is mathematically sound (every
+breakdown still sums correctly, `MAX_POSSIBLE_SCORE` stays consistent), and it left the
+"obvious" recommendations untouched. But on the harder, more ambiguous profiles, it
+pushed the acoustic/mood signals out even faster in favor of raw energy proximity,
+amplifying rather than fixing the "same generalist songs everywhere" bias. **This
+experiment was reverted after testing** — `GENRE_MATCH_POINTS` / `ENERGY_MATCH_MAX_POINTS`
+are back at `2.0` / `2.0` in `recommender.py`; only the `MAX_POSSIBLE_SCORE` constant
+(a genuine small bugfix — the old hardcoded `"/ 6.00"` would have silently gone stale
+under any future weight change) was kept.
 
 ---
 

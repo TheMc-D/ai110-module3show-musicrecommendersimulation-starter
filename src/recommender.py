@@ -12,11 +12,14 @@ from dataclasses import dataclass
 # Acousticness fit:   +1.0 if song is on the correct side of the 0.5 threshold
 #                     for likes_acoustic -- coarse like/dislike bonus, smallest
 #                     weight since it's a threshold check, not a similarity score
-# Max possible score: 6.0
+# Max possible score: sum of the four constants below (see MAX_POSSIBLE_SCORE)
 GENRE_MATCH_POINTS = 2.0
 MOOD_MATCH_POINTS = 1.0
 ENERGY_MATCH_MAX_POINTS = 2.0
 ACOUSTIC_FIT_POINTS = 1.0
+MAX_POSSIBLE_SCORE = (
+    GENRE_MATCH_POINTS + MOOD_MATCH_POINTS + ENERGY_MATCH_MAX_POINTS + ACOUSTIC_FIT_POINTS
+)
 
 @dataclass
 class Song:
