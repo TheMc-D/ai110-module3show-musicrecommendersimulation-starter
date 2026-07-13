@@ -58,35 +58,31 @@ def _score_features(
     target_energy: float,
     likes_acoustic: bool,
 ) -> Tuple[float, List[str]]:
-    """
-    Shared scoring core used by both the functional (dict-based) and OOP
-    (dataclass-based) code paths so the two never drift apart.
-    """
+    """Shared scoring core used by both the functional (dict) and OOP (dataclass) code paths."""
     score = 0.0
     reasons: List[str] = []
 
     if genre.lower() == favorite_genre.lower():
         score += GENRE_MATCH_POINTS
-        reasons.append(f"genre matches your favorite ({genre})")
+        reasons.append(f"genre match: {genre} (+{GENRE_MATCH_POINTS:.1f})")
 
     if mood.lower() == favorite_mood.lower():
         score += MOOD_MATCH_POINTS
-        reasons.append(f"mood matches your favorite ({mood})")
+        reasons.append(f"mood match: {mood} (+{MOOD_MATCH_POINTS:.1f})")
 
     energy_gap = abs(energy - target_energy)
     energy_points = max(0.0, 1 - energy_gap) * ENERGY_MATCH_MAX_POINTS
     score += energy_points
-    if energy_gap <= 0.1:
-        reasons.append(f"energy ({energy:.2f}) is very close to your target ({target_energy:.2f})")
-    elif energy_gap <= 0.3:
-        reasons.append(f"energy ({energy:.2f}) is reasonably close to your target ({target_energy:.2f})")
+    if energy_points > 0:
+        reasons.append(
+            f"energy ({energy:.2f} vs target {target_energy:.2f}) (+{energy_points:.2f})"
+        )
 
     song_is_acoustic = acousticness >= 0.5
     if song_is_acoustic == likes_acoustic:
         score += ACOUSTIC_FIT_POINTS
-        reasons.append(
-            "acoustic" if song_is_acoustic else "non-acoustic, matching your preference"
-        )
+        fit_desc = "acoustic" if song_is_acoustic else "non-acoustic"
+        reasons.append(f"{fit_desc} fit (+{ACOUSTIC_FIT_POINTS:.1f})")
 
     return score, reasons
 
@@ -100,6 +96,7 @@ class Recommender:
         self.songs = songs
 
     def _score(self, user: UserProfile, song: Song) -> Tuple[float, List[str]]:
+        """Score one song against a user's profile using the shared scoring core."""
         return _score_features(
             song.genre,
             song.mood,
@@ -112,11 +109,13 @@ class Recommender:
         )
 
     def recommend(self, user: UserProfile, k: int = 5) -> List[Song]:
+        """Return the top-k songs for a user, ranked highest score first."""
         scored = [(song, self._score(user, song)[0]) for song in self.songs]
         scored.sort(key=lambda pair: pair[1], reverse=True)
         return [song for song, _ in scored[:k]]
 
     def explain_recommendation(self, user: UserProfile, song: Song) -> str:
+        """Return a human-readable explanation of why a song scored the way it did."""
         score, reasons = self._score(user, song)
         if not reasons:
             return f"Score {score:.2f}: no strong matches, but it's the closest fit available."

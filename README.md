@@ -91,7 +91,7 @@ pip install -r requirements.txt
 3. Run the app:
 
 ```bash
-python src/main.py
+python -m src.main
 ```
 
 ### Running Tests
@@ -108,23 +108,44 @@ You can add more tests in `tests/test_recommender.py`.
 
 ## Sample Recommendation Output
 
+Command: `python -m src.main`
+
 User profile: genre=pop, mood=happy, target_energy=0.8, likes_acoustic=False
 
 ```
-Sunrise City - Score: 5.96
-Because: genre matches your favorite (pop); mood matches your favorite (happy); energy (0.82) is very close to your target (0.80); non-acoustic, matching your preference
+============================================================
+                    TOP RECOMMENDATIONS                     
+============================================================
+Profile: Pop / Happy (target energy 0.80, likes acoustic: False)
 
-Gym Hero - Score: 4.74
-Because: genre matches your favorite (pop); energy (0.93) is reasonably close to your target (0.80); non-acoustic, matching your preference
+1. Sunrise City by Neon Echo
+   Score: 5.96 / 6.00
+   - genre match: pop (+2.0)
+   - mood match: happy (+1.0)
+   - energy (0.82 vs target 0.80) (+1.96)
+   - non-acoustic fit (+1.0)
 
-Rooftop Lights - Score: 3.92
-Because: mood matches your favorite (happy); energy (0.76) is very close to your target (0.80); non-acoustic, matching your preference
+2. Gym Hero by Max Pulse
+   Score: 4.74 / 6.00
+   - genre match: pop (+2.0)
+   - energy (0.93 vs target 0.80) (+1.74)
+   - non-acoustic fit (+1.0)
 
-Night Drive Loop - Score: 2.90
-Because: energy (0.75) is very close to your target (0.80); non-acoustic, matching your preference
+3. Rooftop Lights by Indigo Parade
+   Score: 3.92 / 6.00
+   - mood match: happy (+1.0)
+   - energy (0.76 vs target 0.80) (+1.92)
+   - non-acoustic fit (+1.0)
 
-Storm Runner - Score: 2.78
-Because: energy (0.91) is reasonably close to your target (0.80); non-acoustic, matching your preference
+4. Night Drive Loop by Neon Echo
+   Score: 2.90 / 6.00
+   - energy (0.75 vs target 0.80) (+1.90)
+   - non-acoustic fit (+1.0)
+
+5. Storm Runner by Voltline
+   Score: 2.78 / 6.00
+   - energy (0.91 vs target 0.80) (+1.78)
+   - non-acoustic fit (+1.0)
 ```
 
 **Screenshot or video** *(optional)*: <!-- Insert a screenshot or demo video link here -->
